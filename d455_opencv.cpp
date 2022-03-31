@@ -78,6 +78,7 @@ int main()
 				{
 					rs2_vector accel_data = motion_frame.get_motion_data();
 					rotation_estimate.process_accel(accel_data);
+					std::cout << "Got motion frame:\t\t\t(x, y, z) = " << "(" << accel_data.x << ", " << accel_data.y << ", " << accel_data.z << ")" << std::endl;
 				}
 
 				float3 rotation = rotation_estimate.get_theta();
