@@ -9,4 +9,4 @@ all: d455_opencv
 # wpt-hs.log  does not belong to fefes program set?
 
 d455_opencv: d455_opencv.cpp
-	g++ d455_opencv.cpp -lrealsense2 -I/usr/include/opencv4 -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui -o d455_opencv 
+	g++ d455_opencv.cpp -lrealsense2 -I/usr/include/opencv4 -lopencv_core -lopencv_imgcodecs -lopencv_imgproc -lopencv_highgui -o ./build/d455_opencv 
