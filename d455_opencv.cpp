@@ -1,10 +1,13 @@
 #include <iostream>
 #include <iomanip>
 #include <opencv2/opencv.hpp>
+#include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp> 
 #include <librealsense2/rs.hpp>
 #include <unistd.h>
 #include "./include/rotation_estimator.h"
+//#include <Eigen/Quaternion.h>
+//#include <boost/math/quaternion.hpp>
 
 #define DEPTH_WIDTH  640
 #define DEPTH_HEIGHT 480
@@ -13,6 +16,7 @@
 #define COLOR_HEIGHT 480
 #define COLOR_FRAMERATE 15
 
+#define TRANSFORM 0
 #define VISUALIZE 1
 
 int main()
@@ -55,15 +59,6 @@ int main()
 
 		for( rs2::frame frame : frames )
 		{
-			/*
-			if( frame.is<rs2::motion_frame>() )
-			{
-				rs2::motion_frame motion_frame = frame.as<rs2::motion_frame>();
-				rs2_vector xyz = motion_frame.get_motion_data();
-
-				std::cout << "Got motion frame: (x, y, z) = " << "(" << xyz.x << ", " << xyz.y << ", " << xyz.z << ")" << std::endl;
-			}
-			*/
 			if( frame.is<rs2::motion_frame>() )
 			{
 				rs2::motion_frame motion_frame = frame.as<rs2::motion_frame>();
@@ -78,18 +73,22 @@ int main()
 				{
 					rs2_vector accel_data = motion_frame.get_motion_data();
 					rotation_estimate.process_accel(accel_data);
-					std::cout << "Got motion frame:\t\t\t(x, y, z) = " << "(" << accel_data.x << ", " << accel_data.y << ", " << accel_data.z << ")" << std::endl;
+//					std::cout << "Got motion frame:\t\t\t(x, y, z) = " << "(" << accel_data.x << ", " << accel_data.y << ", " << accel_data.z << ")" << std::endl;
 				}
 
+/*
 				float3 rotation = rotation_estimate.get_theta();
 				std::cout << "(R, Y, P) = (" << rotation.x << ", " << rotation.y << ", " << rotation.z << ")" << std::endl;
+
+				float3 second_rotation = rotation_estimate.rotation_matrix_to_ryp();
+				std::cout << "(R, Y, P) = (" << second_rotation.x << ", " << second_rotation.y << ", " << second_rotation.z << ") second" << std::endl;
+*/
 			}
 			else
 			{
 				// get a depth frame
 				rs2::depth_frame depth = frames.get_depth_frame();
 				rs2::video_frame color = frames.get_color_frame();
-		//		rs2::motion_frame accelerometer = frames.get_motion();
 
 				uint16_t* depth_data = (uint16_t*)depth.get_data();
 				float depth_at_edge = depth_data[0] * depth_scale;
@@ -97,14 +96,23 @@ int main()
 				// create opencv matrix representations of the images
 				cv::Mat depth_image(cv::Size(DEPTH_WIDTH, DEPTH_HEIGHT), CV_16UC1, (void*)depth.get_data(), cv::Mat::AUTO_STEP);
 				cv::Mat color_image(cv::Size(COLOR_WIDTH, COLOR_HEIGHT), CV_8UC3, (void*)color.get_data(), cv::Mat::AUTO_STEP);
-				
+
+				// transform images to align them with "down" -> 0 pitch, 0 roll
+				cv::Mat rotation_matrix = cv::Mat::zeros( 3, 3, CV_64FC1 );
+				rotation_estimate.get_rotation_matrix( rotation_matrix );
+
+#if TRANSFORM
+				cv::Mat transformed_image = depth_image.clone();
+				cv::warpPerspective( depth_image, transformed_image, rotation_matrix, depth_image.size() );
+				depth_image = transformed_image.clone();
+#endif
+
 #if VISUALIZE
 				// colorize the depth image (for display only)
 				cv::Mat depth_image_colorized(depth_image);
-		//		depth_image_colorized.convertTo(depth_image_colorized, CV_8UC1);
 				cv::convertScaleAbs(depth_image_colorized, depth_image_colorized, 0.03);
 				cv::applyColorMap(depth_image_colorized, depth_image_colorized, cv::COLORMAP_JET);
-
+				
 				// display the images on the windows
 				cv::imshow(depth_window_name, depth_image_colorized);
 				cv::imshow(color_window_name, color_image);
