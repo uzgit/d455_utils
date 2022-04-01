@@ -126,7 +126,7 @@ public:
         std::lock_guard<std::mutex> lock(theta_mtx);
         return theta;
     }
-   
+  
     void get_rotation_matrix(cv::Mat& destination)
     {
 	float3 local_theta = get_theta();
@@ -134,11 +134,9 @@ public:
 	double yaw  = 0; // do not use the yaw
 	double pitch = local_theta.z;
 
-/*
-	roll  *= 0.0005;
-	pitch *= 0.0005;
-	yaw = 0;
-*/
+	roll  = 0;
+	pitch = 0;
+	yaw   = 0.5;
 
         //Precompute sines and cosines of Euler angles
         double su = sin(roll);
@@ -157,17 +155,6 @@ public:
         destination.at<double>(2, 0) = -sv;
         destination.at<double>(2, 1) = su*cv;
         destination.at<double>(2, 2) = cu*cv;   	
-
-/*	
-	for( int i = 0; i < destination.size().height; i ++ )
-	{
-		for( int ii = 0; ii < destination.size().width; ii ++)
-		{
-			std::cout << destination.at<double>(i, ii) << "\t";
-		}
-		std::cout << std::endl;
-	}
-*/
     }
 
     float3 rotation_matrix_to_ryp()
@@ -183,8 +170,6 @@ public:
 
 	    return result;
     }
-
-/*    
 
     std::string type2str(int type) {
 	    std::string r;
@@ -208,14 +193,14 @@ public:
 
 	  return r;
 	}
-
+/*
     void get_rotation_matrix(cv::Mat& destination)
     {
 	// transform images to align them with "down" -> 0 pitch, 0 roll
 	cv::Point2f src_vertices[4];
-	src_vertices[0] = cv::Point(20, 20);
+	src_vertices[0] = cv::Point(120, 20);
 	src_vertices[1] = cv::Point(300, 30);
-	src_vertices[2] = cv::Point(15, 460);
+	src_vertices[2] = cv::Point(150, 300);
 	src_vertices[3] = cv::Point(620, 470);
 
 	cv::Point2f dst_vertices[4];
@@ -246,30 +231,6 @@ public:
 
     }
 */
-
-    /*
-    void get_rotation_matrix(cv::Mat& destination)
-    {
-	destination.at<double>(0, 0) = 0.44;
-	destination.at<double>(0, 1) = -0.027;
-	destination.at<double>(0, 2) = 20;
-	destination.at<double>(1, 0) = 0.16;
-	destination.at<double>(1, 1) = 0.4;
-	destination.at<double>(1, 2) = 20;
-	destination.at<double>(2, 0) = 1.9e-05;
-	destination.at<double>(2, 1) = -0.0011;
-	destination.at<double>(2, 2) = 1;
-	destination.at<double>(3, 0) = 0.44;
-	destination.at<double>(3, 1) = -0.027;
-	destination.at<double>(3, 2) = 20;
-	destination.at<double>(4, 0) = 0.16;
-	destination.at<double>(4, 1) = 0.4;
-	destination.at<double>(4, 2) = 20;
-	destination.at<double>(5, 0) = 1.9e-05;
-	destination.at<double>(5, 1) = -0.0011;
-	destination.at<double>(5, 2) = 1;
-    }
-    */
 };
 
 

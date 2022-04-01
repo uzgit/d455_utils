@@ -16,7 +16,7 @@
 #define COLOR_HEIGHT 480
 #define COLOR_FRAMERATE 15
 
-#define TRANSFORM 0
+#define TRANSFORM 1
 #define VISUALIZE 1
 
 int main()
@@ -97,13 +97,16 @@ int main()
 				cv::Mat depth_image(cv::Size(DEPTH_WIDTH, DEPTH_HEIGHT), CV_16UC1, (void*)depth.get_data(), cv::Mat::AUTO_STEP);
 				cv::Mat color_image(cv::Size(COLOR_WIDTH, COLOR_HEIGHT), CV_8UC3, (void*)color.get_data(), cv::Mat::AUTO_STEP);
 
+				depth_image.convertTo(depth_image, CV_64F);
+
 				// transform images to align them with "down" -> 0 pitch, 0 roll
 				cv::Mat rotation_matrix = cv::Mat::zeros( 3, 3, CV_64FC1 );
 				rotation_estimate.get_rotation_matrix( rotation_matrix );
 
 #if TRANSFORM
 				cv::Mat transformed_image = depth_image.clone();
-				cv::warpPerspective( depth_image, transformed_image, rotation_matrix, depth_image.size() );
+//				cv::warpPerspective( depth_image, transformed_image, rotation_matrix, depth_image.size(), cv::WARP_INVERSE_MAP );
+				cv::warpPerspective( depth_image, transformed_image, rotation_matrix, depth_image.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT );
 				depth_image = transformed_image.clone();
 #endif
 
